@@ -1,24 +1,7 @@
-const multer = require("multer")
-const { s3Storage } = require("../helper/Upload.hepler")
-const { sanitizeFile } = require("../middleware/UploadImage.middeware")
+const uploadHelper = require("../helper/Upload.hepler");
 
-// Image middleware for storage and validation
-const uploadImageMiddleware = multer({
-    storage: s3Storage,
-    fileFilter: (req, file, callback) => {
-        sanitizeFile(file, (err) => {
-            if (err) {
-                req.fileValidationError = err;
-                return callback(null, false);
-            }
-            callback(null, true);
-        });
-    },
-});
-
-const uploadImageController = [
-    uploadImageMiddleware.single("image"),
-    async (req, res, next) => {
+const uploadImage = async (req, res, next) => {
+    uploadHelper.single("image")(req, res, (err) => {
         if (req.fileValidationError) {
             // File validation error occurred
             res.status(400).send({
@@ -35,9 +18,11 @@ const uploadImageController = [
             });
         } else {
             // No image file uploaded
-            res.status(400).send({ error: "No image file uploaded" });
+            res.status(400).send({ error: "No image uploaded" });
         }
-    },
-];
+    });
+};
 
-module.exports = { uploadImageController };
+module.exports = {
+    uploadImage
+}
